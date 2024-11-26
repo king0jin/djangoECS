@@ -9,6 +9,14 @@ permissions:
  id-token: write # This is required for requesting the JWT
  contents: read # This is required for actions/checkout
 
+env:
+ AWS_REGION: ap-northeast-2
+ ECR_REPOSITORY: djangoecs
+ ECS_SERVICE: djangoecscicd
+ ECS_CLUSTER: djangocicd
+ ECS_TASK_DEFINITION: ./djangocicd-revision1.json
+ CONTAINER_NAME: djangoecs
+
 jobs:
   build:
     runs-on : ubuntu-latest
@@ -46,5 +54,18 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::730335547094:role/djangoECSrole
-          role-session-name: djangoECSrole 
+          role-session-name: djangoECSrole
           aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecrlogin@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: build and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/djangoecs:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/djangoecs:$IMAGE_TAG
