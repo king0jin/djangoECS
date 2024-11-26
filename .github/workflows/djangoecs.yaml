@@ -48,7 +48,3 @@ jobs:
           role-to-assume: arn:aws:iam::730335547094:role/djangoECSrole
           role-session-name: djangoECSrole
           aws-region: ap-northeast-2
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecrlogin@62f4f872db3836360b72999f4b87f1ff13310f3a
