@@ -12,12 +12,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Python Serup
+      - name: Python Setup
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
 
-      - name: INnstall Dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -31,7 +31,8 @@ jobs:
       - name: build and release to DockerHub
         env:
           NAME: ${{secrets.DOCKERHUB_USERNAME}}
-          REPO: ${{secrets.DOCKERHUB_NAME}}
+          REPO: djangoecs
         run: |
           docker build -t $REPO .
+          docker tag $REPO:latest $NAME/$REPO:latest
           docker push $NAME/$REPO:latest
