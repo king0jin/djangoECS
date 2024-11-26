@@ -32,7 +32,8 @@ jobs:
         env:
           NAME: ${{secrets.DOCKERHUB_USERNAME}}
           REPO: djangoecs
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t $REPO .
-          docker tag $REPO:latest $NAME/$REPO:latest
-          docker push $NAME/$REPO:latest
+          docker tag $REPO:latest $NAME/$REPO:$IMAGE_TAG
+          docker push $NAME/$REPO:$IMAGE_TAG
