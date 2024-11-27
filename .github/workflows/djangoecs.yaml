@@ -13,7 +13,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: djangoecs
   ECS_TASK_DEFINITION: ./task-definition.json
-  CONTAINER_NAME: jiniContainer #아무거나 
+  CONTAINER_NAME: djangoApp
   ECS_SERVICE: djangoecs
   ECS_CLUSTER: djangocicd 
 
