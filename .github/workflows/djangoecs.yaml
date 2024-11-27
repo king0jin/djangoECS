@@ -9,6 +9,14 @@ permissions:
  id-token: write # This is required for requesting the JWT
  contents: read # This is required for actions/checkout
 
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: djangoecs
+  ECS_TASK_DEFINITION: ./task-definition.json
+  CONTAINER_NAME: jiniContainer #아무거나 
+  ECS_SERVICE: djangoecs
+  ECS_CLUSTER: djangocicd 
+
 jobs:
   build:
     runs-on : ubuntu-latest
@@ -48,3 +56,33 @@ jobs:
           role-to-assume: arn:aws:iam::730335547094:role/djangoECSrole
           role-session-name: djangoECSrole
           aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecrlogin@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-taskdefinition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-taskdefinition@df9643053eda01f169e64a0e60233aacca83799a
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
